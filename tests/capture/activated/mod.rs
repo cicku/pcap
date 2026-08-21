@@ -37,6 +37,31 @@ fn capture_dead_savefile() {
 }
 
 #[test]
+#[cfg(not(windows))]
+fn capture_dead_savefile_non_utf8_name() {
+    use std::ffi::OsStr;
+    use std::os::unix::ffi::OsStrExt;
+
+    let mut packets = Packets::new();
+    packets.push(1460408319, 1234, 1, 1, &[1]);
+    packets.push(1460408320, 4321, 1, 1, &[2]);
+
+    let dir = TempDir::new().unwrap();
+    // A UN*X path is a byte string, it does not have to be valid UTF-8.
+    let tmpfile = dir.path().join(OsStr::from_bytes(b"\xe9capture.pcap"));
+
+    let cap = Capture::dead(Linktype(1)).unwrap();
+    let mut save = cap.savefile(&tmpfile).unwrap();
+    packets.foreach(|p| save.write(p));
+    drop(save);
+
+    assert!(tmpfile.exists());
+
+    let mut cap = Capture::from_file(&tmpfile).unwrap();
+    packets.verify(&mut cap);
+}
+
+#[test]
 #[cfg(libpcap_1_7_2)]
 fn capture_dead_savefile_append() {
     let mut packets1 = Packets::new();
