@@ -13,6 +13,8 @@ use crate::capture::Precision;
 impl Capture<Dead> {
     /// Creates a "fake" capture handle for the given link type.
     pub fn dead(linktype: Linktype) -> Result<Capture<Dead>, Error> {
+        raw::ensure_available()?;
+
         let handle = unsafe { raw::pcap_open_dead(linktype.0, 65535) };
         Ok(Capture::from(
             NonNull::<raw::pcap_t>::new(handle).ok_or(Error::InsufficientMemory)?,
@@ -25,6 +27,8 @@ impl Capture<Dead> {
         linktype: Linktype,
         precision: Precision,
     ) -> Result<Capture<Dead>, Error> {
+        raw::ensure_available()?;
+
         let handle = unsafe {
             raw::pcap_open_dead_with_tstamp_precision(linktype.0, 65535, precision as u32)
         };

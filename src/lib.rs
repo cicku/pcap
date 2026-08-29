@@ -129,6 +129,9 @@ pub enum Error {
     InvalidRawFd,
     /// Errno error
     ErrnoError(errno::Errno),
+    #[cfg(windows)]
+    /// The capture library could not be loaded
+    LibraryNotFound,
     /// Buffer size overflows capacity
     BufferOverflow,
 }
@@ -175,6 +178,8 @@ impl fmt::Display for Error {
             #[cfg(not(windows))]
             InvalidRawFd => write!(f, "invalid raw file descriptor provided"),
             ErrnoError(ref e) => write!(f, "libpcap os errno: {e}"),
+            #[cfg(windows)]
+            LibraryNotFound => write!(f, "could not load wpcap.dll, Npcap may not be installed"),
             BufferOverflow => write!(f, "buffer size too large"),
         }
     }
@@ -197,6 +202,8 @@ impl std::error::Error for Error {
             #[cfg(not(windows))]
             InvalidRawFd => "invalid raw file descriptor provided",
             ErrnoError(..) => "internal error, providing errno",
+            #[cfg(windows)]
+            LibraryNotFound => "could not load wpcap.dll",
             BufferOverflow => "buffer size too large",
         }
     }
@@ -282,6 +289,8 @@ mod tests {
         #[cfg(not(windows))]
         errors.push(Error::InvalidRawFd);
         errors.push(Error::ErrnoError(errno::Errno(125)));
+        #[cfg(windows)]
+        errors.push(Error::LibraryNotFound);
         errors.push(Error::BufferOverflow);
 
         for error in errors.iter() {

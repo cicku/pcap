@@ -136,6 +136,8 @@ impl<T: State + ?Sized> Capture<T> {
     where
         F: FnOnce(*const libc::c_char, *mut libc::c_char) -> *mut raw::pcap_t,
     {
+        raw::ensure_available()?;
+
         Error::with_errbuf(|err| {
             let handle = match path {
                 None => func(ptr::null(), err),

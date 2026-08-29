@@ -175,6 +175,8 @@ impl Device {
     where
         F: FnOnce(*mut raw::pcap_if_t) -> Result<T, Error>,
     {
+        raw::ensure_available()?;
+
         let all_devs = Error::with_errbuf(|err| {
             let mut all_devs: *mut raw::pcap_if_t = ptr::null_mut();
             if unsafe { raw::pcap_findalldevs(&mut all_devs, err) } != 0 {
